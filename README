@@ -1,0 +1,5 @@
+三节点ICNcache实验。
+注意点：
+1.速率设置，上行都为100k，下行为1M。tc+netem
+2.在gateway-earth中，在发送代码ccnl_ll_TX中，有一个判断if(buf->datalen > 900)，主要作用是区分发送的数据大小。gateway-earth端会有两种数据转发，一种是client的请求转发，请求包一般不大于100bytes。另一种是gateway-earth作为数据中继传回client端。因此需要进行区分，这里的900表示，回传的数据大小必须大于900bytes，比如1k起步。
+3.在gateway-mars端，sendto_file函数中，在发送文件前，首先发送了1 bytes大小的数据，该数据是告诉gateway-earth，火星要进行数据传输了。因为在gateway-earth端，也会接受到两种数据，第一种是client发送的请求包，另一种则是火星发送的数据。这两种包的处理不一样。火星发送的数据大，需要进行切割。接收处理在gateway-earth的ccnl_io_loop函数的USE_IPV4中，有个判断：else if (src_addr.sa.sa_family == AF_INET && len>1) 也就是接收到的数据大小大于1，说明是client发送的请求包，否则为火星的数据。
